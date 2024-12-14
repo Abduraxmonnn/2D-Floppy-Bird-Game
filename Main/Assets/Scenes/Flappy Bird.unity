@@ -296,13 +296,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae79f9d99372a6b438f800230f434b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  audioSource: {fileID: 149568776}
+  menuMusic: {fileID: 8300000, guid: 228261822a8134838a9ad39ffc240e93, type: 3}
+  gameModeMusic: {fileID: 8300000, guid: 0bf7569c4cc494e4ba599117dc733b70, type: 3}
+  deathSound: {fileID: 8300000, guid: 8e0d0122ab7864b49a5f4bf36cbd283c, type: 3}
   player: {fileID: 527830928}
   spawner: {fileID: 2105631072}
   scoreText: {fileID: 1474871343}
   playButton: {fileID: 892178073}
   gameOver: {fileID: 298509898}
-  gameMusic: {fileID: 8300000, guid: 0bf7569c4cc494e4ba599117dc733b70, type: 3}
-  deathSound: {fileID: 8300000, guid: 8e0d0122ab7864b49a5f4bf36cbd283c, type: 3}
 --- !u!4 &149568775
 Transform:
   m_ObjectHideFlags: 0

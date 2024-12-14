@@ -6,27 +6,18 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    [SerializeField] private AudioSource audioSource;  // Reference to the AudioSource component
+    [SerializeField] private AudioClip menuMusic;      // Background music for the menu
+    [SerializeField] private AudioClip gameModeMusic;  // Background music (game mode song)
+    [SerializeField] private AudioClip deathSound;     // Death sound (played when the player dies)
+
     [SerializeField] private Player player;
     [SerializeField] private Spawner spawner;
     [SerializeField] private Text scoreText;
     [SerializeField] private GameObject playButton;
     [SerializeField] private GameObject gameOver;
 
-    [Header("Audio")]
-    [SerializeField] private AudioClip gameMusic;  // Game music clip
-    [SerializeField] private AudioClip deathSound; // Death sound clip
-    private AudioSource audioSource;               // AudioSource component to play music
-
     public int score { get; private set; } = 0;
-
-    private enum GameState
-    {
-        Menu,
-        Playing,
-        GameOver
-    }
-
-    private GameState currentState;
 
     private void Awake()
     {
@@ -35,9 +26,6 @@ public class GameManager : MonoBehaviour
         } else {
             Instance = this;
         }
-
-        // Get the AudioSource component
-        audioSource = GetComponent<AudioSource>();
     }
 
     private void OnDestroy()
@@ -49,95 +37,93 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // Initially, set the game to the menu state
-        currentState = GameState.Menu;
-        PlayGameMusic(); // Game music starts when the game is ready
-        Pause();
+        PlayMenuMusic();  // Play the menu music when the game starts
+        Pause();          // Pause the game at the beginning
     }
 
-    private void Update()
+    // Play the menu music (before the game starts)
+    public void PlayMenuMusic()
     {
-        // If the game is in the "GameOver" state and music is not playing, restart game music.
-        if (currentState == GameState.GameOver && !audioSource.isPlaying)
+        if (audioSource != null && menuMusic != null)
         {
-            PlayGameMusic(); // Optionally you can restart the game music if needed.
+            audioSource.clip = menuMusic;
+            audioSource.loop = true;  // Loop the music during the menu screen
+            audioSource.Play();       // Play the menu music
+        }
+        else
+        {
+            Debug.LogError("AudioSource or menuMusic is not assigned!");
         }
     }
 
-    // Function to play the game music
+    // Start playing the background music (game music)
     public void PlayGameMusic()
     {
-        if (audioSource != null && gameMusic != null && currentState == GameState.Playing)
+        if (audioSource != null && gameModeMusic != null)
         {
-            audioSource.clip = gameMusic;  // Set the game music clip
-            audioSource.loop = true;       // Loop the game music
-            audioSource.Play();            // Play the game music
+            audioSource.clip = gameModeMusic;
+            audioSource.loop = true;  // Loop the music during gameplay
+            audioSource.Play();       // Play the background music
+        }
+        else
+        {
+            Debug.LogError("AudioSource or gameModeMusic is not assigned!");
         }
     }
 
-    // Function to play the death sound
+    // Play the death sound when the player dies
     public void PlayDeathSound()
     {
         if (audioSource != null && deathSound != null)
         {
-            Debug.Log("AudioSource: " + audioSource);  // Log AudioSource component
-            Debug.Log("Death Sound Clip: " + deathSound);  // Log death sound clip
-            audioSource.PlayOneShot(deathSound);  // Play the death sound
+            audioSource.Stop();               // Stop the current music (menu or game music)
+            audioSource.PlayOneShot(deathSound); // Play the death sound (one-shot)
         }
         else
         {
-            Debug.LogError("Death sound or AudioSource is not assigned!");
+            Debug.LogError("AudioSource or deathSound is not assigned!");
         }
     }
 
+    // Pause the game (stop time and disable player control)
     public void Pause()
     {
-        Time.timeScale = 0f;
-        player.enabled = false;
-        audioSource.Stop();
+        Time.timeScale = 0f;  // Stop game time (freeze the game)
+        player.enabled = false;  // Disable player control
     }
 
+    // Start the game
     public void Play()
     {
-        // Transition from Menu to Playing
-        currentState = GameState.Playing;
-
         score = 0;
         scoreText.text = score.ToString();
 
-        playButton.SetActive(false);
-        gameOver.SetActive(false);
+        playButton.SetActive(false);  // Hide the play button
+        gameOver.SetActive(false);    // Hide the game over screen
 
-        Time.timeScale = 1f;
-        player.enabled = true;
+        Time.timeScale = 1f;  // Resume game time
+        player.enabled = true;  // Enable player control
 
-        // Play the game music
-        PlayGameMusic();
-
-        // Clean up any existing pipes from previous game sessions
+        // Destroy any remaining pipes from previous games
         Pipes[] pipes = Object.FindObjectsByType<Pipes>(FindObjectsSortMode.None);
-
-        for (int i = 0; i < pipes.Length; i++) {
-            Destroy(pipes[i].gameObject);
+        foreach (var pipe in pipes) {
+            Destroy(pipe.gameObject);
         }
+
+        PlayGameMusic();  // Start the background music (game music)
     }
 
+    // Game Over (end the game)
     public void GameOver()
     {
-        // Transition from Playing to GameOver
-        currentState = GameState.GameOver;
+        playButton.SetActive(true);  // Show the play button
+        gameOver.SetActive(true);    // Show the game over screen
 
-        // Play death sound and then show game over screen
-        PlayDeathSound();
-
-        playButton.SetActive(true);
-        gameOver.SetActive(true);
-
-        // Stop the game music and play the game over music (or menu music if you have one)
-        audioSource.Stop();
-        Pause();
+        Pause();  // Pause the game
+        PlayDeathSound();  // Play the death sound when the player dies
     }
 
+    // Increase the score and update the score display
     public void IncreaseScore()
     {
         score++;
