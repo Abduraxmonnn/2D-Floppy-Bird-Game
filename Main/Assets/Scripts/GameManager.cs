@@ -14,29 +14,39 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Player player;
     [SerializeField] private Spawner spawner;
     [SerializeField] private Text scoreText;
+    [SerializeField] private Text bestScoreText;       // Reference to the Best Score UI Text
     [SerializeField] private GameObject playButton;
     [SerializeField] private GameObject gameOver;
 
     public int score { get; private set; } = 0;
+    private int bestScore = 0;
 
     private void Awake()
     {
-        if (Instance != null) {
+        if (Instance != null)
+        {
             DestroyImmediate(gameObject);
-        } else {
+        }
+        else
+        {
             Instance = this;
         }
     }
 
     private void OnDestroy()
     {
-        if (Instance == this) {
+        if (Instance == this)
+        {
             Instance = null;
         }
     }
 
     private void Start()
     {
+        // Load the best score from PlayerPrefs (if available)
+        bestScore = PlayerPrefs.GetInt("BestScore", 0); // Default to 0 if no score is saved
+        bestScoreText.text = "Best Score: " + bestScore.ToString();
+
         PlayMenuMusic();  // Play the menu music when the game starts
         Pause();          // Pause the game at the beginning
     }
@@ -106,7 +116,8 @@ public class GameManager : MonoBehaviour
 
         // Destroy any remaining pipes from previous games
         Pipes[] pipes = Object.FindObjectsByType<Pipes>(FindObjectsSortMode.None);
-        foreach (var pipe in pipes) {
+        foreach (var pipe in pipes)
+        {
             Destroy(pipe.gameObject);
         }
 
@@ -116,8 +127,18 @@ public class GameManager : MonoBehaviour
     // Game Over (end the game)
     public void GameOver()
     {
+        // Check and save the best score
+        if (score > bestScore)
+        {
+            bestScore = score;
+            PlayerPrefs.SetInt("BestScore", bestScore);  // Save the best score
+            PlayerPrefs.Save(); // Ensure the data is saved to disk
+        }
+
         playButton.SetActive(true);  // Show the play button
         gameOver.SetActive(true);    // Show the game over screen
+
+        bestScoreText.text = "Best Score: " + bestScore.ToString();  // Update the UI with the best score
 
         Pause();  // Pause the game
         PlayDeathSound();  // Play the death sound when the player dies
